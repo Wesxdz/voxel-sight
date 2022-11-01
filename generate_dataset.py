@@ -26,7 +26,7 @@ noise_layers = [TerrainNoiseLayer(1.0, 0.5), TerrainNoiseLayer(0.1, 3.0), Terrai
 
 pool_collection_name = "voxels"
 block_size = 0.0
-chunk_size = 16
+chunk_size = 8
 
 # TODO: Will need to create a distinct placer for each voxel type, or encode objects in vertex data
 placer = bpy.data.objects["placer"]
@@ -63,7 +63,7 @@ def spawn_occlusion_chunks(radius, noise, d):
     verts = []
     rgb = []
     colors = []
-    for y in range(0, radius*2):
+    for y in range(0, radius):
         for x in range(0, radius*2):
             chunk_origin = Vector((x*chunk_size, y*chunk_size, 0.0))
             spawn_voxel_occlusion_heightmap(noise, verts, colors, rgb, chunk_origin.x, chunk_origin.y, chunk_size, chunk_size, 1.0)
@@ -73,7 +73,7 @@ def spawn_occlusion_chunks(radius, noise, d):
     bpy.context.object.modifiers['GeometryNodes'].node_group = bpy.data.node_groups['Geometry Nodes']
     bpy.context.object.modifiers['GeometryNodes']['Input_2'] = bpy.data.objects['occlusion_voxel']
     bpy.ops.geometry.color_attribute_add(name="color", color=(1.0, 0, 0.0, 1))
-    player_floor = noise[chunk_size*radius][chunk_size*radius]
+    player_floor = noise[0][chunk_size*radius]
     ob.location.z = -player_floor*block_size
     ob.scale = Vector((block_size, block_size, block_size))
     for i, cd in enumerate(bpy.context.active_object.data.attributes['color'].data):
@@ -86,7 +86,7 @@ def spawn_occlusion_chunks(radius, noise, d):
 def spawn_chunks(radius, noise):
     terrain = []
     verts = []
-    for y in range(0, radius*2):
+    for y in range(0, radius):
         for x in range(0, radius*2):
             chunk_origin = Vector((x*chunk_size, y*chunk_size, 0.0))
             spawn_voxel_heightmap(noise, verts, chunk_origin.x, chunk_origin.y, chunk_size, chunk_size, 1.0)
@@ -108,15 +108,19 @@ def spawn_chunks(radius, noise):
         bpy.context.object.modifiers['GeometryNodes']['Input_2'] = bpy.data.objects[vt + '_voxel']
         ob.scale = Vector((block_size, block_size, block_size))
     
-        player_floor = noise[chunk_size*radius][chunk_size*radius]
+        player_floor = noise[0][chunk_size*radius]
         ob.location.z = -player_floor*block_size
         terrain.append(ob)
     bpy.data.objects["Camera"].location.x = chunk_size*radius*block_size
-    bpy.data.objects["Camera"].location.y = chunk_size*radius*block_size
+    bpy.data.objects["Camera"].location.y = 0
     return terrain
         
 bpy.context.scene.render.image_settings.color_depth = "16"
 bpy.context.scene.render.image_settings.compression = 0
+
+downsample = 4
+bpy.context.scene.render.resolution_x = int(640/downsample)
+bpy.context.scene.render.resolution_y = int(360/downsample)
 
 dataset_size = 32
 for d in range(dataset_size):
@@ -134,7 +138,7 @@ for d in range(dataset_size):
     bpy.data.objects["Camera"].rotation_euler.x = math.radians(random.randint(45, 115))
     bpy.data.objects["Camera"].rotation_euler.z = math.radians(random.randint(-44, 44))
     # Spawn random terrain
-    radius = 2
+    radius = 1
     noise = np.zeros(shape=[chunk_size*radius*2, chunk_size*radius*2])
     for layer in noise_layers:
         opensimplex.seed(layer.seed)

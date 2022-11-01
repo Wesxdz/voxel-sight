@@ -10,12 +10,11 @@ from torchvision import transforms, utils
 import faiss
 from einops import rearrange
 from config import *
+import faiss
 
 # Ignore warnings
 import warnings
 warnings.filterwarnings("ignore")
-
-plt.ion()   # interactive mode
 
 class VoxelViewDataset(Dataset):
     """
@@ -34,14 +33,10 @@ class VoxelViewDataset(Dataset):
 
     def get_camera_view(self, idx):
         img = io.imread(os.path.join(self.dir, "voxels_{}.png".format(idx)))
-        d = 4
-        cs = 1
-        colors = rearrange(img, 'w h c -> (w h) c')
-        print(colors.shape)
-        pq = faiss.ScalarQuantizer(d, cs)
-        pq.train(colors)
-        # codes = pq.compute_codes(colors)
-        # print(codes)
+        xt = rearrange(img, 'h w c -> (h w) c').astype('float32')
+        sq = faiss.ScalarQuantizer(screen_size[0], faiss.ScalarQuantizer.QT_4bit)
+        sq.train(xt)
+        codes = sq.compute_codes(xt)
         return torch.from_numpy(img)
 
     def get_voxel_grid(self, idx):
