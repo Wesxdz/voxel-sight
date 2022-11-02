@@ -33,14 +33,17 @@ class VoxelViewDataset(Dataset):
 
     def get_camera_view(self, idx):
         img = io.imread(os.path.join(self.dir, "voxels_{}.png".format(idx)))
-        xt = rearrange(img, 'h w c -> (h w) c').astype('float32')
-        sq = faiss.ScalarQuantizer(screen_size[0], faiss.ScalarQuantizer.QT_4bit)
-        sq.train(xt)
-        codes = sq.compute_codes(xt)
-        return torch.from_numpy(img)
+        cv = rearrange(img, 'h w c -> c h w')
+        cv = np.delete(cv, 3, 0) # Remove alpha channel...
+        # xt = rearrange(img, 'h w c -> (h w) c').astype('float32')
+        # sq = faiss.ScalarQuantizer(screen_size[0], faiss.ScalarQuantizer.QT_4bit)
+        # sq.train(xt)
+        # codes = sq.compute_codes(xt)
+        # print(codes.shape)
+        return torch.from_numpy(cv.astype('float32'))
 
     def get_voxel_grid(self, idx):
-        height_grid = torch.zeros(voxel_grid_size, dtype=torch.int8)
+        height_grid = torch.zeros(voxel_grid_size, dtype=torch.float32)
         reward_grid = torch.zeros(voxel_grid_size, dtype=torch.int32)
         with open(os.path.join(self.dir, "visible_elements_{}".format(idx))) as visible:
             lines = visible.readlines()

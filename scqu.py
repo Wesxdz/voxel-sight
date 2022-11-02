@@ -20,12 +20,12 @@ sq.train(xt)
 # encode 
 codes = sq.compute_codes(xt)
 print(sys.getsizeof(codes))
-print(type(codes[0][1]))
+print(codes.shape)
 
 # decode
 x2 = sq.decode(codes)
 
-comp = rearrange(x2, '(h w) c -> h w c', h=90, w=160)
+comp = rearrange(x2, '(h w) c -> h w c', h=45, w=80)
 io.imsave("test.png", comp)
 
 # compute reconstruction error

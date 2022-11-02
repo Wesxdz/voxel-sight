@@ -122,7 +122,7 @@ downsample = 4
 bpy.context.scene.render.resolution_x = int(640/downsample)
 bpy.context.scene.render.resolution_y = int(360/downsample)
 
-dataset_size = 32
+dataset_size = 1000
 for d in range(dataset_size):
     # Recreate noise layers for random seeds!
     for layer in noise_layers:
