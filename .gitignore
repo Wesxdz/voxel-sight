@@ -2,4 +2,5 @@
 __pycache__
 blender-3.3.1-linux-x64
 data
-voxelsight.ckpt
+*.ckpt
+wandb
